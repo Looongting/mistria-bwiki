@@ -20,7 +20,7 @@ bwiki/
 │   ├── maintenance/          # 维护工具
 │   │   ├── dump_t2.py        # 处理 t2_output.json
 │   │   └── cleanup_data.py   # 批量清理数据文件
-│   └── upload/               # Wiki 上传工具（待开发）
+│   └── upload/               # Wiki 上传工具
 ├── data/                     # 原始提取的英文 JSON 数据（~63个文件）
 ├── data_cn/                  # 翻译后的中文 JSON 数据（~63个文件）
 ├── data_fix/                 # 修复处理的 JSON 数据（~6400个文件）
@@ -139,6 +139,77 @@ python main.py
 - **功能**：处理游戏的 `t2_output.json` 文件
 - **单独运行**：`python tools/maintenance/dump_t2.py`
 
+### Wiki 上传工具 (tools/upload/)
+
+#### wiki.py
+- **功能**：提供 MediaWiki API 客户端，用于连接和操作 Wiki
+- **主要功能**：
+  - Wiki 登录认证（支持多种连接方式）
+  - 页面编辑和保存
+  - 页面缓存刷新
+  - 模板数据提取和解析
+  - 支持嵌套模板解析
+- **依赖**：需要 `mwclient` 库
+- **使用方式**：作为其他上传工具的基础类，通常不单独使用
+
+#### update_processor_base.py
+- **功能**：通用的 Wiki 页面更新处理器基类
+- **核心特性**：
+  - 基于 JSON 配置的章节更新系统
+  - 支持多种更新策略（maintainWiki、updateByLocal、addLocalFirst、addLocalLast）
+  - 自动章节解析和重组
+  - 支持页面过滤器
+  - 完整的数据流程管理（拉取→生成→上传）
+- **章节标记**：使用 `<!-- @@章节名@@ -->` 标记划分章节
+- **数据流程**：
+  1. 拉取 Wiki 页面数据到 `./wiki/page`
+  2. 准备本地数据到 `./wiki/local`
+  3. 生成上传数据到 `./wiki/upload`
+  4. 执行上传到 Wiki
+
+#### recipes_update_processor.py
+- **功能**：专门用于食谱页面的 Wiki 更新处理器
+- **数据源**：从 `data_cn/items.json` 的 `cooked_dishes` 条目提取数据
+- **支持模式**：
+  ```bash
+  # 只提取本地食谱数据
+  python tools/upload/recipes_update_processor.py --local
+  
+  # 只拉取 Wiki 页面数据
+  python tools/upload/recipes_update_processor.py --wiki
+  
+  # 只生成上传数据
+  python tools/upload/recipes_update_processor.py --upload
+  
+  # 生成上传数据并上传到 Wiki
+  python tools/upload/recipes_update_processor.py --upload-wiki
+  
+  # 完整流程（本地数据 + Wiki 数据 + 生成上传数据 + 可选上传）
+  python tools/upload/recipes_update_processor.py --both
+  ```
+- **配置文件**：`tools/upload/recipes.json`
+- **输出目录**：`./wiki/`（包含 page、local、upload 子目录）
+- **特性**：
+  - 自动构建菜品索引（按 ID 和名称）
+  - 支持增量更新（保持 Wiki 原有内容）
+  - 完整的错误处理和日志记录
+  - 支持批量操作和进度显示
+
+#### recipes.json
+- **功能**：食谱页面更新的配置文件
+- **配置结构**：
+  - `wiki_ask`: Wiki 查询语句（如 `[[分类:食谱]]`）
+  - `chapter`: 章节配置数组
+    - `action`: 更新策略（maintainWiki/updateByLocal/addLocalFirst/addLocalLast）
+    - `chapter_title`: 章节名称
+    - `chapter_content`: 章节内容模板
+    - `page_filter`: 可选的页面过滤器
+- **更新策略说明**：
+  - `maintainWiki`: 保持 Wiki 原有内容不变
+  - `updateByLocal`: 使用本地数据完全替换章节内容
+  - `addLocalFirst`: 在章节开头添加本地数据
+  - `addLocalLast`: 在章节末尾添加本地数据
+
 ## 开发指南
 
 ### 添加新工具
@@ -214,7 +285,7 @@ python tests/smoke_import.py
 中文数据 (data_cn/ ~63文件)
     ↓ [item_json_to_table.py] - 转换为表格
 表格文件 (output/items_table.xlsx - 2000+物品数据)
-    ↓ [upload 工具 - 待开发]
+    ↓ [upload 工具 - 基于JSON配置的Wiki页面更新系统]
 Wiki 内容
 ```
 
