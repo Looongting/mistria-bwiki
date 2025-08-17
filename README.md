@@ -1,11 +1,11 @@
 # Fields of Mistria Wiki 数据处理工具
 
-这是一个用于处理 Fields of Mistria 游戏数据的工具集，主要功能包括数据提取、翻译和格式转换，最终用于 Wiki 内容生成。
+这是一个用于处理 Fields of Mistria 游戏数据的工具集，主要功能包括数据提取、翻译、格式转换和 Wiki 内容维护，最终用于 BWiki 内容生成和更新。
 
 ## 项目结构
 
 ```
-bwiki/
+mistria-bwiki/
 ├── config/                    # 统一配置管理
 │   ├── __init__.py
 │   ├── settings.py           # 统一配置（整合个人和共享配置）
@@ -16,18 +16,26 @@ bwiki/
 │   │   ├── slice_fiddle.py   # 从 __fiddle__.json 提取游戏数据
 │   │   └── trans_data_cn.py  # 将英文数据翻译为中文
 │   ├── convert/              # 格式转换工具
-│   │   └── item_json_to_table.py # 物品数据转详细表格
+│   │   └── convert_items_to_excel.py # 物品数据转详细表格
 │   ├── maintenance/          # 维护工具
-│   │   ├── dump_t2.py        # 处理 t2_output.json
+│   │   ├── prettify_t2_json.py # 处理和美化 t2_output.json
 │   │   └── cleanup_data.py   # 批量清理数据文件
 │   └── upload/               # Wiki 上传工具
+│       ├── wiki.py           # MediaWiki API 客户端
+│       ├── update_processor_base.py # 通用 Wiki 更新处理器基类
+│       ├── recipes_update_processor.py # 食谱页面更新处理器
+│       ├── bug_update_processor.py    # Bug 页面更新处理器
+│       ├── recipes.json       # 食谱页面配置
+│       ├── bug.json          # Bug 页面配置
+│       └── fish.json         # 鱼类页面配置
 ├── data/                     # 原始提取的英文 JSON 数据（~63个文件）
 ├── data_cn/                  # 翻译后的中文 JSON 数据（~63个文件）
 ├── data_fix/                 # 修复处理的 JSON 数据（~6400个文件）
 ├── output/                   # 生成的表格和汇总文件
-├── desc/                     # 描述和汇总文档
+├── data_wiki/                # Wiki 数据工作目录
 ├── tests/                    # 测试脚本
 ├── main.py                   # 主入口脚本（一键运行完整流程）
+├── requirements.txt          # Python 依赖包列表
 └── README.md                 # 本文档
 ```
 
@@ -109,14 +117,14 @@ python main.py
 
 ### 格式转换工具 (tools/convert/)
 
-#### item_json_to_table.py
+#### convert_items_to_excel.py
 - **功能**：将物品 JSON 数据转换为详细的 Excel 表格
 - **输入**：`data_cn/items.json`（中文物品数据）
 - **输出**：`output/items_table.xlsx`（包含三个工作表）
   - `items`：主要物品数据表（2000+个物品）
   - `tags_table`：标签统计表（240+个标签）
   - `subcategory_table`：子分类统计表（70+个子分类）
-- **单独运行**：`python tools/convert/item_json_to_table.py`
+- **单独运行**：`python tools/convert/convert_items_to_excel.py`
 - **注意**：此工具已集成到 `main.py` 中，通常无需单独运行
 
 ### 维护工具 (tools/maintenance/)
@@ -135,9 +143,9 @@ python main.py
   python tools/maintenance/cleanup_data.py --targets data output --apply
   ```
 
-#### dump_t2.py
-- **功能**：处理游戏的 `t2_output.json` 文件
-- **单独运行**：`python tools/maintenance/dump_t2.py`
+#### prettify_t2_json.py
+- **功能**：处理和美化游戏的 `t2_output.json` 文件
+- **单独运行**：`python tools/maintenance/prettify_t2_json.py`
 
 ### Wiki 上传工具 (tools/upload/)
 
@@ -210,6 +218,24 @@ python main.py
   - `addLocalFirst`: 在章节开头添加本地数据
   - `addLocalLast`: 在章节末尾添加本地数据
 
+#### bug_update_processor.py
+- **功能**：专门用于 Bug 页面的 Wiki 更新处理器
+- **数据源**：从 `data_cn/items.json` 的相关条目提取数据
+- **支持模式**：与 `recipes_update_processor.py` 相同的运行模式
+- **配置文件**：`tools/upload/bug.json`
+- **输出目录**：`./wiki/`（包含 page、local、upload 子目录）
+- **特性**：与食谱处理器相同的特性和功能
+
+#### bug.json
+- **功能**：Bug 页面更新的配置文件
+- **配置结构**：与 `recipes.json` 相同
+- **用途**：用于 Bug 相关 Wiki 页面的批量更新
+
+#### fish.json
+- **功能**：鱼类页面更新的配置文件
+- **配置结构**：与 `recipes.json` 相同
+- **用途**：用于鱼类相关 Wiki 页面的批量更新
+
 ## 开发指南
 
 ### 添加新工具
@@ -278,15 +304,15 @@ python tests/smoke_import.py
 ## 数据流程
 
 ```
-游戏文件 (__fiddle__.json, localization.json)
+游戏文件 (__fiddle__.json, localization.json, t2_output.json)
     ↓ [slice_fiddle.py] - 提取52000+键值对
 原始数据 (data/ ~63文件, data_fix/ ~6400文件)
     ↓ [trans_data_cn.py] - 翻译为中文
 中文数据 (data_cn/ ~63文件)
-    ↓ [item_json_to_table.py] - 转换为表格
+    ↓ [convert_items_to_excel.py] - 转换为表格
 表格文件 (output/items_table.xlsx - 2000+物品数据)
     ↓ [upload 工具 - 基于JSON配置的Wiki页面更新系统]
-Wiki 内容
+Wiki 内容 (recipes, bugs, fish 等页面)
 ```
 
 ## 运行结果示例
@@ -306,10 +332,31 @@ Total keys in __fiddle__.json: 52761
 数据翻译成功！
 
 步骤3: 生成output目录的表格文件
-转换完成！共转换了 2066 个物品
+Excel文件已保存到: output/items_table.xlsx
+共转换了 2066 个物品
 发现 242 个不重复的tags
 发现 73 个不重复的subcategories
 表格文件生成成功！
 
 ===== 数据处理流程完成 =====
+数据已成功从fiddle提取并翻译为中文。
+原始数据位于: data
+修复数据位于: data_fix
+中文数据位于: data_cn
+输出文件位于: output
+```
+
+## 项目依赖
+
+项目依赖以下 Python 包：
+
+```txt
+pandas>=1.3.0         # 数据处理和表格生成
+openpyxl>=3.0.0       # Excel 文件操作
+mwclient>=0.10.1      # MediaWiki API 客户端
+```
+
+安装依赖：
+```bash
+pip install -r requirements.txt
 ```

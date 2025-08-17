@@ -40,8 +40,31 @@ class UpdateProcessorBase:
         self.dir_local = os.path.join(self.output_root, "local")
         self.dir_upload = os.path.join(self.output_root, "upload")
 
+        # 延迟加载配置
+        self._config = None
+
+        # CLI模式间共享的数据
+        self._cached_wiki_data = None
+        self._cached_local_data = None
+
         for d in [self.dir_page, self.dir_local, self.dir_upload]:
             os.makedirs(d, exist_ok=True)
+
+    # ---------- 配置管理 ----------
+    @property
+    def config(self) -> Dict[str, Any]:
+        """延迟加载配置"""
+        if self._config is None:
+            self._config = self._load_json(self.json_path)
+        return self._config
+
+    def get_wiki_ask(self) -> str:
+        """获取Wiki查询语句"""
+        return self.config.get("wiki_ask", "").strip()
+
+    def get_category_name(self) -> str:
+        """子类可重写的分类名称"""
+        return "pages"
 
     # ---------- 子类可覆盖的钩子 ----------
     def prepare_local_data(self) -> Dict[str, dict]:
@@ -76,8 +99,7 @@ class UpdateProcessorBase:
         """
         # 读取配置
         if wiki_ask is None:
-            cfg = self._load_json(self.json_path)
-            wiki_ask = cfg.get("wiki_ask", "").strip()
+            wiki_ask = self.get_wiki_ask()
 
         if not wiki_ask:
             logger.error("缺少 wiki_ask 查询语句")
@@ -142,8 +164,7 @@ class UpdateProcessorBase:
             格式: {页面名: "生成的页面内容"}
         """
         # 读取配置
-        cfg = self._load_json(self.json_path)
-        chapters: List[dict] = cfg.get("chapter", [])
+        chapters: List[dict] = self.config.get("chapter", [])
 
         if not chapters:
             logger.warning("JSON 配置中没有找到 chapter 配置")
@@ -462,5 +483,157 @@ class UpdateProcessorBase:
     def _normalize_ws(text: str) -> str:
         # 对比时忽略多余空白差异
         return re.sub(r"\s+", " ", (text or "").strip())
+
+    # ---------- CLI 框架 ----------
+    def run_cli(self, args: List[str] = None) -> None:
+        """统一的CLI入口"""
+        import sys
+        args = args or sys.argv[1:]
+
+        if not args:
+            self._show_help()
+            return
+
+        mode = args[0].lstrip('-')
+        self._setup_logging()
+
+        try:
+            if mode == 'local':
+                self._run_local()
+            elif mode == 'wiki':
+                self._run_wiki()
+            elif mode == 'upload':
+                self._run_upload()
+            elif mode == 'upload-wiki':
+                self._run_upload_wiki()
+            elif mode == 'both':
+                self._run_both()
+            else:
+                print(f"未知模式: {mode}")
+                self._show_help()
+        except Exception as e:
+            print(f"✗ 执行失败: {e}")
+            import traceback
+            traceback.print_exc()
+
+    def _run_local(self) -> None:
+        """本地数据模式"""
+        print("提取本地数据...")
+        data = self.prepare_local_data()
+        self._cached_local_data = data  # 缓存本地数据
+        print(f"✓ 成功处理 {len(data)} 项数据")
+
+    def _run_wiki(self) -> None:
+        """Wiki数据模式"""
+        print("拉取Wiki数据...")
+        client = self._create_wiki_client()
+        data = self.fetch_wiki_pages(client, category_name=self.get_category_name())
+        self._cached_wiki_data = data  # 缓存Wiki数据
+        print(f"✓ 成功拉取 {len(data)} 个页面")
+
+    def _run_upload(self) -> None:
+        """生成上传数据模式"""
+        print("生成上传数据...")
+
+        # 获取本地数据（优先使用缓存）
+        local_data = self._cached_local_data
+        if local_data is None:
+            local_data = self.prepare_local_data()
+            self._cached_local_data = local_data
+
+        # 获取Wiki数据（优先使用缓存，如果没有则尝试从文件加载）
+        wiki_data = self._cached_wiki_data
+        if wiki_data is None:
+            wiki_data = self._load_existing_wiki_data()
+
+        upload_data = self.generate_upload_data(local_data, self.get_category_name(), wiki_data)
+        print(f"✓ 成功生成 {len(upload_data)} 个页面数据")
+
+    def _run_upload_wiki(self) -> None:
+        """上传到Wiki模式"""
+        print("上传到Wiki...")
+        if not self._confirm_upload():
+            return
+
+        client = self._create_wiki_client()
+
+        # 获取本地数据（优先使用缓存）
+        local_data = self._cached_local_data
+        if local_data is None:
+            local_data = self.prepare_local_data()
+            self._cached_local_data = local_data
+
+        # 获取Wiki数据（优先使用缓存，如果没有则尝试从文件加载）
+        wiki_data = self._cached_wiki_data
+        if wiki_data is None:
+            wiki_data = self._load_existing_wiki_data()
+
+        upload_data = self.generate_upload_data(local_data, self.get_category_name(), wiki_data)
+        results = self.upload_to_wiki(client, upload_data, self.get_category_name())
+
+        success = sum(1 for r in results.values() if r)
+        print(f"✓ 上传完成: 成功 {success}/{len(results)} 个页面")
+
+    def _run_both(self) -> None:
+        """完整流程模式"""
+        print("执行完整流程...")
+        self._run_local()
+        self._run_wiki()
+        self._run_upload()
+
+        if input("是否上传到Wiki? (y/N): ").lower() == 'y':
+            self._run_upload_wiki()
+
+    def _load_existing_wiki_data(self) -> Optional[Dict[str, Any]]:
+        """从文件加载现有的Wiki页面数据"""
+        try:
+            category_name = self.get_category_name()
+            summary_file = os.path.join(self.dir_page, f"pages_summary_{category_name}.json")
+
+            if os.path.exists(summary_file):
+                with open(summary_file, "r", encoding="utf-8") as f:
+                    data = json.load(f)
+                logger.info(f"从文件加载了 {len(data)} 个页面的Wiki数据")
+                return data
+            else:
+                logger.debug(f"Wiki数据文件不存在: {summary_file}")
+                return None
+        except Exception as e:
+            logger.warning(f"加载Wiki数据文件失败: {e}")
+            return None
+
+    def _create_wiki_client(self):
+        """创建Wiki客户端"""
+        from .wiki import wiki as WikiClient
+        from config.settings import Wiki
+
+        print(f"连接Wiki: {Wiki.BASE_URL}")
+        client = WikiClient(Wiki.BASE_URL, Wiki.SESSDATA)
+        client.login()
+        print("✓ Wiki登录成功")
+        return client
+
+    def _setup_logging(self) -> None:
+        """设置日志"""
+        import logging
+        logging.basicConfig(
+            level=logging.INFO,
+            format='%(asctime)s - %(levelname)s - %(message)s'
+        )
+
+    def _confirm_upload(self) -> bool:
+        """确认上传操作"""
+        print("⚠️  即将修改Wiki页面!")
+        return input("确认继续? (yes/N): ").lower() == 'yes'
+
+    def _show_help(self) -> None:
+        """显示帮助信息"""
+        name = self.__class__.__name__
+        print(f"{name} 使用说明:")
+        print("  local      - 提取本地数据")
+        print("  wiki       - 拉取Wiki数据")
+        print("  upload     - 生成上传数据")
+        print("  upload-wiki- 上传到Wiki")
+        print("  both       - 完整流程")
 
 

@@ -1,8 +1,8 @@
 {
-    "wiki_ask": "[[分类:食谱]]",
+    "wiki_ask": "[[分类:昆虫]]",
     "chapter": [
         {
-            "action": "updateByLocal",
+            "action": "maintainWiki",
             "chapter_title": "描述",
             "chapter_content": "{{完善编辑}}描述内容亟待编辑"
         },
@@ -13,8 +13,13 @@
         },
         {
             "action": "maintainWiki",
-            "chapter_title": "食谱",
-            "chapter_content": "==食谱==\n{{RecipesByItem}}"
+            "chapter_title": "地点",
+            "chapter_content": "==地点==\n{{AreaByItem}}"
+        },
+        {
+            "action": "maintainWiki",
+            "chapter_title": "家具配方",
+            "chapter_content": "==家具配方==\n{{FurnitureByItem}}"
         },
         {
             "action": "maintainWiki",
@@ -22,7 +27,7 @@
             "chapter_content": "==博物馆收集==\n{{MuseumByItem}}"
         },
         {
-            "action": "updateByLocal",
+            "action": "maintainWiki",
             "chapter_title": "送礼",
             "chapter_content": "==送礼==\n{{GiftsByItem}}"
         },
@@ -44,7 +49,7 @@
         {
             "action": "maintainWiki",
             "chapter_title": "其他",
-            "chapter_content": "[[Category:食谱]][[Category:烹饪]]"
+            "chapter_content": "[[Category:昆虫]]"
         }
     ]
 }
