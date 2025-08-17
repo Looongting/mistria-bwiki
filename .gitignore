@@ -47,6 +47,10 @@ data_cn/
 data_cn/*
 data_fix/
 data_fix/*
+data_wiki
+data_wiki/*
+AI_analyse
+AI_analyse/*
 
 # Personal configuration files (contains sensitive information)
 config/personal.py

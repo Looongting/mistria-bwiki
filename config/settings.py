@@ -17,6 +17,7 @@ class Repo:
     DATA_FIX_DIR = REPO_ROOT / "data_fix"
     DATA_CN_DIR = REPO_ROOT / "data_cn"
     OUTPUT_DIR = REPO_ROOT / "output"
+    WIKI_DIR = REPO_ROOT / "data_wiki"  # Wiki 数据工作目录
 
 class FileNames:
     """文件名配置"""
@@ -56,7 +57,7 @@ Game = _Game()
 
 class _Wiki:
     """Wiki 配置"""
-    BASE_URL = "https://wiki.example.com"  # Wiki 站点地址
+    BASE_URL = "wiki.biligame.com/mistria"  # Wiki 站点地址
     API_ENDPOINT = "/api.php"  # Wiki API 端点
 
     @property
