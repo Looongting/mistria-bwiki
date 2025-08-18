@@ -1,0 +1,22 @@
+{
+    "昆虫": "bug.json",
+    "鱼类": "fish.json",
+    "料理": "recipes.json",
+    "装修": "furniture.json",
+    "作物": "crops.json",
+    "种子": "seed.json",
+    "采集物": "forageable.json",
+    "怪物战利品": "monster_drops.json",
+    "动物产品": "ranching.json",
+    "磨坊产品": "mill.json",
+    "文物": "archaeology.json",
+    "材料": "material.json",
+    "其他物品": "other.json",
+    "防具": "armor.json",
+    "工具": "tool.json",
+    "武器": "weapon.json",
+    "宝箱": "chest.json",
+    "约会灵感": "date_inspiration.json",
+    "约会相片": "date_photo.json",
+    "金属锭": "ignot.json"
+}

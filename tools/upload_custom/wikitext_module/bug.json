@@ -1,0 +1,55 @@
+{
+    "wiki_ask": "[[分类:昆虫]]",
+    "chapter": [
+        {
+            "action": "maintainWiki",
+            "chapter_title": "描述",
+            "chapter_content": "{{完善编辑}}描述内容亟待编辑"
+        },
+        {
+            "action": "maintainWiki",
+            "chapter_title": "信息",
+            "chapter_content": "{{DataByItem}}"
+        },
+        {
+            "action": "maintainWiki",
+            "chapter_title": "地点",
+            "chapter_content": "==地点==\n{{AreaByItem}}"
+        },
+        {
+            "action": "maintainWiki",
+            "chapter_title": "工匠",
+            "chapter_content": "==工匠==\n{{CraftByItem}}"
+        },
+        {
+            "action": "maintainWiki",
+            "chapter_title": "博物馆收集",
+            "chapter_content": "==博物馆收集==\n{{MuseumByItem}}"
+        },
+        {
+            "action": "maintainWiki",
+            "chapter_title": "送礼",
+            "chapter_content": "==送礼==\n{{GiftsByItem}}"
+        },
+        {
+            "action": "maintainWiki",
+            "chapter_title": "任务",
+            "chapter_content": "==任务==\n{{QuestByItem}}"
+        },
+        {
+            "action": "maintainWiki",
+            "chapter_title": "你知道吗",
+            "chapter_content": "==你知道吗=="
+        },
+        {
+            "action": "maintainWiki",
+            "chapter_title": "历史",
+            "chapter_content": "==历史=="
+        },
+        {
+            "action": "maintainWiki",
+            "chapter_title": "其他",
+            "chapter_content": "[[Category:昆虫]]"
+        }
+    ]
+}
