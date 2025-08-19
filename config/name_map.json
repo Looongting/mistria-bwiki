@@ -34,5 +34,19 @@
         "mushroom_purple": "紫蘑菇怪",
         "rock_stack": "石堆怪",
         "rock_stack_lava": "熔岩石堆怪"
+    },
+    "object_prototypes.json": {
+        "tree_oak": "橡树",
+        "tree_pine": "松树",
+        "tree_deep_woods": "深林之树",
+        "tree_apple": "苹果树",
+        "tree_cherry": "樱桃树",
+        "tree_lemon": "柠檬树",
+        "tree_peach": "桃树",
+        "tree_orange": "橘子树",
+        "tree_pear": "梨树",
+        "tree_pomegranate": "石榴树",
+        "tree_plum_blossom": "梅花树",
+        "tree_coconut": "椰子树"
     }
 }
