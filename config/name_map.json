@@ -48,5 +48,15 @@
         "tree_pomegranate": "石榴树",
         "tree_plum_blossom": "梅花树",
         "tree_coconut": "椰子树"
+    },
+    "quests.json": {
+        "request_board": "公告板任务",
+        "story_quest": "主线任务",
+        "tali_challenges": "厨艺挑战",
+        "heart_quests": "好感任务",
+        "tail_registry":"厨艺挑战顺序注册器",
+        "crown_request": "王室委托",
+        "fetch_quest":"物品收集任务",
+        "crown_registry":"王室委托任务配置"
     }
 }
