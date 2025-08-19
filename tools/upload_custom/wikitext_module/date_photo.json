@@ -3,6 +3,16 @@
     "chapter": [
         {
             "action": "maintainWiki",
+            "chapter_title": "描述",
+            "chapter_content": "{{完善编辑}}描述内容亟待编辑"
+        },
+        {
+            "action": "maintainWiki",
+            "chapter_title": "信息",
+            "chapter_content": "==信息==\n{{DataByItem}}"
+        },
+        {
+            "action": "maintainWiki",
             "chapter_title": "你知道吗",
             "chapter_content": "==你知道吗=="
         },

@@ -13,11 +13,6 @@
         },
         {
             "action": "maintainWiki",
-            "chapter_title": "获得方式",
-            "chapter_content": "==获得方式==\n{{ArchaeologyByItem}}"
-        },
-        {
-            "action": "maintainWiki",
             "chapter_title": "博物馆收集",
             "chapter_content": "==博物馆收集==\n{{MuseumByItem}}"
         },
