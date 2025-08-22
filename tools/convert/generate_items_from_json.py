@@ -58,31 +58,42 @@ def expand_json(data):
 
     return expanded_data
 
-def extract_obj_info(data):
+def extract_obj_info(items_data, prototypes_data):
     """
-    obj信息提取函数：从obj里查找相关的信息，更新每个item的信息
-    传入json，从obj里查找相关的信息，更新每个item的信息
+    obj信息提取函数：从prototypes数据中提取信息并更新到items数据中
 
     Args:
-        data (dict): 展开后的JSON数据
+        items_data (dict): 展开后的items数据
+        prototypes_data (dict): object_prototypes.json加载的数据
 
     Returns:
-        dict: 更新后的JSON数据，包含从obj提取的信息
+        dict: 更新后的items数据
     """
-    # TODO: 具体的逻辑暂时不要细化，我们后面再做
-    # 这里预留接口用于后续实现obj信息提取逻辑
+    updated_data = items_data.copy()
+    crop_prototypes = prototypes_data.get("crop", {})
 
-    updated_data = data.copy()
+    # 需要提取的键
+    keys_to_extract = [
+        "sprites", "harvest", "day_to_stage", "regrow_days",
+        "count", "seasons", "managed_regrow_sprite", "currency"
+    ]
 
-    # 预留的处理逻辑框架
-    for item_key, item_data in updated_data.items():
-        if isinstance(item_data, dict):
-            # 这里将来会添加从obj文件中提取信息的逻辑
-            # 例如：
-            # - 提取物品的详细属性
-            # - 添加制作配方信息
-            # - 补充物品关联信息等
-            pass
+    for item_key, item_info in updated_data.items():
+        if isinstance(item_info, dict):
+            # 检查item是否有crop_object属性，用于映射到crop原型
+            crop_object_key = item_info.get("crop_object")
+            if crop_object_key and crop_object_key in crop_prototypes:
+                crop_info = crop_prototypes[crop_object_key]
+                for key in keys_to_extract:
+                    if key in crop_info:
+                        # 将原型信息更新到种子item中
+                        item_info[key] = crop_info[key]
+
+                # 为作物item添加其种子的名称
+                if crop_object_key in updated_data:
+                    harvested_item = updated_data[crop_object_key]
+                    if isinstance(harvested_item, dict):
+                        harvested_item['seed_name'] = item_key
 
     return updated_data
 
@@ -157,30 +168,45 @@ def main():
 
     # 使用settings.py中的路径配置
     input_json_path = settings.Repo.DATA_CN_DIR / "items.json"
+    prototypes_json_path = settings.Repo.DATA_CN_DIR / "object_prototypes.json"
     output_lua_path = settings.Repo.WIKI_LUA_DIR / "Items.lua"
 
     # 确保输出目录存在
     output_lua_path.parent.mkdir(parents=True, exist_ok=True)
 
+    # 读取items.json文件
     try:
-        print(f"Reading from {input_json_path}...")
+        print(f"Reading items from {input_json_path}...")
         with open(input_json_path, "r", encoding="utf-8") as f:
-            json_data = json.load(f)
+            items_data = json.load(f)
     except FileNotFoundError:
-        print(f"Error: Input file not found at {input_json_path}")
-        print("Please ensure the source JSON file exists.")
+        print(f"Error: Items file not found at {input_json_path}")
+        print("Please ensure the items.json file exists.")
         return
     except json.JSONDecodeError:
         print(f"Error: Could not decode JSON from {input_json_path}")
         return
 
+    # 读取object_prototypes.json文件
+    try:
+        print(f"Reading prototypes from {prototypes_json_path}...")
+        with open(prototypes_json_path, "r", encoding="utf-8") as f:
+            prototypes_data = json.load(f)
+    except FileNotFoundError:
+        print(f"Error: Prototypes file not found at {prototypes_json_path}")
+        print("Please ensure the object_prototypes.json file exists.")
+        return
+    except json.JSONDecodeError:
+        print(f"Error: Could not decode JSON from {prototypes_json_path}")
+        return
+
     # 1. 展开JSON数据
     print("Expanding JSON data...")
-    expanded_data = expand_json(json_data)
+    expanded_data = expand_json(items_data)
 
-    # 2. 提取obj信息（当前为占位符）
-    print("Extracting additional object info...")
-    updated_data = extract_obj_info(expanded_data)
+    # 2. 提取obj信息，处理crop相关数据
+    print("Extracting crop info from prototypes...")
+    updated_data = extract_obj_info(expanded_data, prototypes_data)
 
     # 3. 转换为Lua Table字符串
     print("Converting to Lua table format...")
