@@ -97,6 +97,38 @@ def extract_obj_info(items_data, prototypes_data):
 
     return updated_data
 
+def extract_bug_info(items_data, bugs_data):
+    """
+    从bugs.json中提取信息并整合到Items里
+
+    Args:
+        items_data (dict): 已有的items数据
+        bugs_data (dict): bugs.json加载的数据
+
+    Returns:
+        dict: 更新后的items数据
+    """
+    updated_data = items_data.copy()
+
+    # 需要提取的键值
+    keys_to_extract = [
+        "type", "idle_sprite", "move_sprite", "spawn", "seasons",
+        "hours", "weather", "rarity", "liked_object_categories",
+        "locations", "can_spawn_on_water", "dungeon_biome", "attraction"
+    ]
+
+    for bug_key, bug_info in bugs_data.items():
+        # 假设bug的键名与item的键名直接对应
+        if bug_key in updated_data:
+            item_info = updated_data[bug_key]
+            if isinstance(item_info, dict):
+                for key in keys_to_extract:
+                    if key in bug_info:
+                        item_info[key] = bug_info[key]
+
+    return updated_data
+
+
 def to_lua_table(data, indent_level=0):
     """
     json转为lua函数：将Python字典转换为Lua表格式字符串
@@ -169,6 +201,7 @@ def main():
     # 使用settings.py中的路径配置
     input_json_path = settings.Repo.DATA_CN_DIR / "items.json"
     prototypes_json_path = settings.Repo.DATA_CN_DIR / "object_prototypes.json"
+    bugs_json_path = settings.Repo.DATA_CN_DIR / "bugs.json"
     output_lua_path = settings.Repo.WIKI_LUA_DIR / "Items.lua"
 
     # 确保输出目录存在
@@ -200,6 +233,19 @@ def main():
         print(f"Error: Could not decode JSON from {prototypes_json_path}")
         return
 
+    # 读取bugs.json文件
+    try:
+        print(f"Reading bugs from {bugs_json_path}...")
+        with open(bugs_json_path, "r", encoding="utf-8") as f:
+            bugs_data = json.load(f)
+    except FileNotFoundError:
+        print(f"Error: Bugs file not found at {bugs_json_path}")
+        print("Please ensure the bugs.json file exists.")
+        return
+    except json.JSONDecodeError:
+        print(f"Error: Could not decode JSON from {bugs_json_path}")
+        return
+
     # 1. 展开JSON数据
     print("Expanding JSON data...")
     expanded_data = expand_json(items_data)
@@ -208,14 +254,18 @@ def main():
     print("Extracting crop info from prototypes...")
     updated_data = extract_obj_info(expanded_data, prototypes_data)
 
-    # 3. 转换为Lua Table字符串
+    # 3. 提取bug信息
+    print("Extracting bug info...")
+    updated_data = extract_bug_info(updated_data, bugs_data)
+
+    # 4. 转换为Lua Table字符串
     print("Converting to Lua table format...")
     lua_table_content = to_lua_table(updated_data)
 
     # 添加Lua模块返回语句
     lua_script = f"return {lua_table_content}"
 
-    # 4. 保存到输出文件
+    # 5. 保存到输出文件
     print(f"Saving to {output_lua_path}...")
     with open(output_lua_path, "w", encoding="utf-8") as f:
         f.write(lua_script)
