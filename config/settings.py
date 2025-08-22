@@ -18,6 +18,7 @@ class Repo:
     DATA_CN_DIR = REPO_ROOT / "data_cn"
     OUTPUT_DIR = REPO_ROOT / "output"
     WIKI_DIR = REPO_ROOT / "data_wiki"  # Wiki 数据工作目录
+    WIKI_LUA_DIR = REPO_ROOT / "data_lua"
 
 class FileNames:
     """文件名配置"""
