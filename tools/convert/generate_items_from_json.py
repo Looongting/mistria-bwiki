@@ -157,7 +157,7 @@ def main():
 
     # 使用settings.py中的路径配置
     input_json_path = settings.Repo.DATA_CN_DIR / "items.json"
-    output_lua_path = settings.Repo.WIKI_LUA_DIR
+    output_lua_path = settings.Repo.WIKI_LUA_DIR / "Items.lua"
 
     # 确保输出目录存在
     output_lua_path.parent.mkdir(parents=True, exist_ok=True)
