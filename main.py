@@ -4,6 +4,8 @@ import sys
 from tools.extract.slice_fiddle import process_fiddle_data
 from tools.extract.trans_data_cn import main as trans_main
 from tools.convert.convert_items_to_excel import convert_items_to_table
+from tools.convert.convert_json_to_lua import main as json_to_lua_main
+
 
 # 设置工作目录为脚本所在目录
 os.chdir(os.path.dirname(os.path.abspath(__file__)))
@@ -34,7 +36,7 @@ def main():
     print("===== 开始数据处理流程 =====")
 
     # 统一配置
-    from config.settings import Game, Repo, FileNames
+    from config.settings import Game, Repo, FileNames, REPO_ROOT
 
     # 步骤1: 从fiddle提取数据到data目录
     print("\n步骤1: 从fiddle提取数据到data目录")
@@ -46,11 +48,12 @@ def main():
         print("流程终止。")
         return
 
-    # 步骤2: 将data的内容翻译到data_cn目录
-    print("\n步骤2: 将data的内容翻译到data_cn目录")
+    # 步骤2: 将data的内容翻译到data_cn目录（中文并添加英文 *_en 字段）
+    print("\n步骤2: 将data的内容翻译到data_cn目录（含中文与英文备份）")
     try:
-        trans_main(str(Game.LOCALIZATION_PATH), str(Repo.DATA_DIR), str(Repo.DATA_CN_DIR))
-        print("数据翻译成功！")
+        localization_en_path = str(REPO_ROOT / "config" / "localization_en.json")
+        trans_main(str(Game.LOCALIZATION_PATH), localization_en_path, str(Repo.DATA_DIR), str(Repo.DATA_CN_DIR))
+        print("数据翻译成功！（已写入中文与 *_en 英文字段）")
     except Exception as e:
         print(f"数据翻译失败: {e}")
         print("流程终止。")
@@ -83,11 +86,22 @@ def main():
         print(f"表格文件生成失败: {e}")
         print("继续完成其他步骤...")
 
+    # 步骤4: 将指定的JSON文件转换为Lua模块
+    print("\n步骤4: 将指定的JSON文件转换为Lua模块")
+    try:
+        json_to_lua_main()
+        print("JSON到Lua转换成功！")
+    except Exception as e:
+        print(f"JSON到Lua转换失败: {e}")
+        # This is the last processing step, so no need for "continue" message
+        pass
+
     print("\n===== 数据处理流程完成 =====")
-    print("数据已成功从fiddle提取并翻译为中文。")
+    print("数据已成功从fiddle提取并翻译（中文+英文*_en）。")
     print(f"原始数据位于: {Repo.DATA_DIR}")
     print(f"修复数据位于: {Repo.DATA_FIX_DIR}")
-    print(f"中文数据位于: {Repo.DATA_CN_DIR}")
+    print(f"中英合并数据位于: {Repo.DATA_CN_DIR}")
+    print(f"Lua模块位于: {Repo.WIKI_LUA_DIR}")
     print(f"输出文件位于: {Repo.OUTPUT_DIR}")
 
 if __name__ == "__main__":

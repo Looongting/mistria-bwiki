@@ -60,6 +60,7 @@ class _Wiki:
     """Wiki 配置"""
     BASE_URL = "wiki.biligame.com/mistria"  # Wiki 站点地址
     API_ENDPOINT = "/api.php"  # Wiki API 端点
+    NAMESPACE = "ns-828"  # 模块空间
 
     @property
     def SESSDATA(self) -> str:
@@ -72,3 +73,13 @@ class _Wiki:
         return self.BASE_URL + self.API_ENDPOINT
 
 Wiki = _Wiki()
+
+class LuaModule:
+    """Lua模块配置"""
+    # Lua模块相关配置
+    MODULE_DIR = REPO_ROOT / "tools" / "luaModule" / "modules"  # Lua模块目录
+    MODULE_NAMESPACE = "模块:"  # MediaWiki模块命名空间前缀
+    NAMESPACE_ID = 828  # 模块命名空间ID
+    FILE_EXTENSION = ".lua"  # 文件扩展名
+
+LuaModule = LuaModule()
