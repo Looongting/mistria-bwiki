@@ -21,19 +21,19 @@ def test_conversion_functions():
     
     sync_tool = WikiSync()
     
-    # 测试用例
+    # 测试用例：页面名称 -> 文件名 -> 页面名称 的转换一致性
+    # 注意：包含空格的页面名称转换是单向的（从页面到文件），因为无法区分原始下划线和空格转换的下划线
+    # 因此不包含带空格的测试用例
     test_cases = [
         "模块:Fun",
         "模块:Get",
         "模块:Utils",
-        "模块:Module/Fun",  # 包含斜杠的子页面
-        "模块:Module/Get/Utils",  # 多层级子页面
-        "模块:a_b_c",  # 包含下划线的页面名称
-        "模块:a_b_c/Data",  # 包含下划线和斜杠的页面名称
-        "模块:Get/doc",  # 文档页面
-        "模块:Arguments/doc",  # 另一个文档页面
-        "模块:Museum wings",  # 包含空格的页面名称
-        "模块:Museum wings/Data"  # 包含空格和斜杠的页面名称
+        "模块:Module/Fun",
+        "模块:Module/Get/Utils",
+        "模块:a_b_c",
+        "模块:a_b_c/Data",
+        "模块:Get/doc",
+        "模块:Arguments/doc"
     ]
     
     for page_name in test_cases:

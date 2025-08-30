@@ -41,14 +41,16 @@ class WikiSync:
         # 保存原始页面名称用于doc页面判断
         original_page_name = page_name
         
-        # 首先将斜杠替换为特殊标记（双下划线），避免与页面名称中已有的单下划线冲突
-        filename = page_name.replace('/', '__')
+        # 将斜杠替换为特殊标记@
+        filename = page_name.replace('/', '@')
         
-        # 使用特殊标记区分空格和下划线：将空格替换为 `_space_`
-        filename = filename.replace(' ', '_space_')
+        # 使用特殊标记区分空格和下划线：将空格替换为 `_`（单下划线）
+        # 注意：由于无法在反向转换时区分原始下划线和空格转换的下划线，
+        # 因此对于包含空格的页面名称，转换将是单向的（从页面到文件）
+        filename = filename.replace(' ', '_')
         
-        # 判断是否为doc页面（原始页面名称中包含/doc或转换后的文件名以__doc结尾）
-        is_doc_page = '/doc' in original_page_name or filename.endswith('__doc')
+        # 判断是否为doc页面（原始页面名称中包含/doc或转换后的文件名以@doc结尾）
+        is_doc_page = '/doc' in original_page_name or filename.endswith('@doc')
         
         # 根据页面类型选择文件扩展名
         if is_doc_page:
@@ -62,7 +64,7 @@ class WikiSync:
         return filename
         
     def convert_filename_to_page_name(self, filename):
-        """将文件名转换为页面名称，处理双下划线符号、下划线（空格）和doc页面"""
+        """将文件名转换为页面名称，处理@符号和下划线"""
         # 移除文件扩展名
         if filename.endswith(self.file_extension):
             filename_without_ext = filename[:-len(self.file_extension)]
@@ -71,11 +73,8 @@ class WikiSync:
         else:
             filename_without_ext = filename
         
-        # 首先将双下划线替换为斜杠
-        page_name = filename_without_ext.replace('__', '/')
-        
-        # 将特殊标记 `_space_` 替换回空格
-        page_name = page_name.replace('_space_', ' ')
+        # 将@符号替换为斜杠
+        page_name = filename_without_ext.replace('@', '/')
         
         # 添加命名空间前缀
         return self.module_namespace + page_name
