@@ -51,6 +51,8 @@ data_wiki
 data_wiki/*
 AI_analyse
 AI_analyse/*
+data_lua/
+data_lua/*
 
 # Personal configuration files (contains sensitive information)
 config/personal.py
