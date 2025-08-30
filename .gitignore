@@ -70,3 +70,5 @@ Thumbs.db
 *.bak
 *~
 
+./tools/luaModule/modules/*
+./tools/luaModule/modules/*/*
